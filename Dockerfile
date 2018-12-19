@@ -32,34 +32,11 @@ RUN useradd -m $ASTERISKUSER \
 
 # Download extra high quality sounds
 WORKDIR /var/lib/asterisk/sounds
-RUN curl -f -o asterisk-core-sounds-en-wav-current.tar.gz -L http://downloads.asterisk.org/pub/telephony/sounds/asterisk-core-sounds-en-wav-current.tar.gz \
-	&& tar -xzf asterisk-core-sounds-en-wav-current.tar.gz \
-	&& rm -f asterisk-core-sounds-en-wav-current.tar.gz \
-	&& curl -f -o asterisk-extra-sounds-en-wav-current.tar.gz -L http://downloads.asterisk.org/pub/telephony/sounds/asterisk-extra-sounds-en-wav-current.tar.gz \
-	&& tar -xzf asterisk-extra-sounds-en-wav-current.tar.gz \
-	&& rm -f asterisk-extra-sounds-en-wav-current.tar.gz \
-	&& curl -f -o asterisk-core-sounds-en-g722-current.tar.gz -L http://downloads.asterisk.org/pub/telephony/sounds/asterisk-core-sounds-en-g722-current.tar.gz \
-	&& tar -xzf asterisk-core-sounds-en-g722-current.tar.gz \
-	&& rm -f asterisk-core-sounds-en-g722-current.tar.gz \
-	&& curl -f -o asterisk-extra-sounds-en-g722-current.tar.gz -L http://downloads.asterisk.org/pub/telephony/sounds/asterisk-extra-sounds-en-g722-current.tar.gz \
-	&& tar -xzf asterisk-extra-sounds-en-g722-current.tar.gz \
-	&& rm -f asterisk-extra-sounds-en-g722-current.tar.gz
+RUN curl -f -o asterisk-core-sounds-en-g729-current.tar.gz -L http://downloads.asterisk.org/pub/telephony/sounds/asterisk-core-sounds-en-g729-current.tar.gz \
+	&& tar -xzf asterisk-core-sounds-en-g729-current.tar.gz \
+	&& rm -f asterisk-core-sounds-en-g729-current.tar.gz
 	
 RUN apt-get update && apt-get install -y unzip 
-
-# Download German sounds
-RUN mkdir /var/lib/asterisk/sounds/de
-WORKDIR /var/lib/asterisk/sounds/de 
-RUN curl -f -o core.zip -L https://www.asterisksounds.org/de/download/asterisk-sounds-core-de-sln16.zip \
-	&& curl -f -o extra.zip -L https://www.asterisksounds.org/de/download/asterisk-sounds-extra-de-sln16.zip \
-	&& unzip -u core.zip \
-	&& unzip -u extra.zip 
-RUN rm -f core.zip \
-	&& rm -f extra.zip 
-RUN chown -R $ASTERISKUSER.$ASTERISKUSER /var/lib/asterisk/sounds/de  \
-	&& find /var/lib/asterisk/sounds/de -type d -exec chmod 0775 {} \;
-
-
 
 RUN echo "en_US.UTF-8 UTF-8" > /etc/locale.gen
 
@@ -156,7 +133,7 @@ RUN curl -sf -o jansson.tar.gz -L http://www.digip.org/jansson/releases/jansson-
 
 # Compile and Install Asterisk
 WORKDIR /usr/src
-RUN curl -f -o asterisk.tar.gz -L http://downloads.asterisk.org/pub/telephony/certified-asterisk/asterisk-certified-13.13-current.tar.gz
+RUN curl -f -o asterisk.tar.gz -L http://downloads.asterisk.org/pub/telephony/certified-asterisk/asterisk-certified-13.21-current.tar.gz
 RUN mkdir asterisk \
 	&& tar -xzf /usr/src/asterisk.tar.gz -C /usr/src/asterisk --strip-components=1 \
 	&& rm asterisk.tar.gz 
@@ -167,7 +144,7 @@ RUN contrib/scripts/get_mp3_source.sh
 RUN make menuselect.makeopts 
 
 # RUN ./menuselect/menuselect --list-options  
-RUN ./menuselect/menuselect --enable=chan_sip --enable=format_mp3 --disable=BUILD_NATIVE
+RUN ./menuselect/menuselect --enable=chan_sip --enable=format_mp3 --enable=func_pitchshift --disable=BUILD_NATIVE
 RUN	cat menuselect.makeopts 
 RUN make 
 RUN make install \
@@ -232,12 +209,8 @@ RUN chmod +x /install-freepbx.sh
 RUN /install-freepbx.sh
 RUN rm -rf /usr/src/freepbx
 
-
-
-
-
-
-
+# Add G729 Codecs
+RUN curl -sSLo /usr/lib/asterisk/modules/codec_g729.so http://asterisk.hosting.lv/bin/codec_g729-ast130-gcc4-glibc-x86_64-core2-sse4.so
 
 
 ##################
